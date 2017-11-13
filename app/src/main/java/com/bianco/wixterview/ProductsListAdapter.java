@@ -20,12 +20,27 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
     private static final String TAG = "ProductsListAdapter";
 
     WeakReference<Context> mContext;
+    WeakReference<ProductsRecyclerView> mRecyclerView;
 
     ProductsListAdapter(Context context) {
         mContext = new WeakReference<>(context);
         ProductListRetriever.getInstance().init(context);
         ProductListRetriever.getInstance().setListener(this);
         ProductListRetriever.getInstance().loadPage(1);
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        mRecyclerView = new WeakReference<>((ProductsRecyclerView) recyclerView);
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        if (recyclerView == mRecyclerView.get()) {
+            mRecyclerView.clear();
+        }
     }
 
     @Override
@@ -38,8 +53,9 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
     @Override
     public void onBindViewHolder(ProductViewsHolder holder, int position) {
         if (position == ProductListRetriever.getInstance().getProductsList().size() - 1) {
-            ProductListRetriever.getInstance().loadNextPage();
-            //TODO: add UI of loading
+            if (ProductListRetriever.getInstance().loadNextPage()) {
+                //TODO: add UI of loading
+            }
         }
 
         ProductListRetriever.Product p = ProductListRetriever.getInstance().getProductsList().get(position);
@@ -70,11 +86,21 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
             int insertionStart = ProductListRetriever.getInstance().getProductsList().size() - numberOfNewProducts;
             notifyItemRangeInserted(insertionStart, numberOfNewProducts);
         }
+        if (mRecyclerView != null && mRecyclerView.get() != null && mRecyclerView.get().getMaxNumberOfChildrenInView() > getItemCount() && ProductListRetriever.getInstance().loadNextPage()) {
+            //TODO: add UI of loading
+        } else {
+            //TODO: remove UI of loading
+        }
     }
 
     @Override
     public void OnProductsListFiltered() {
         notifyDataSetChanged();
+        if (mRecyclerView != null && mRecyclerView.get() != null && mRecyclerView.get().getMaxNumberOfChildrenInView() > getItemCount() && ProductListRetriever.getInstance().loadNextPage()) {
+            //TODO: add UI of loading
+        } else {
+            //TODO: remove UI of loading
+        }
         //TODO: remove UI of loading
     }
 

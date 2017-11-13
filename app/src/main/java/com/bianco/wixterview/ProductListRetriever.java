@@ -29,13 +29,13 @@ public class ProductListRetriever {
     private RequestQueue queue = null;
     private ProductsListListener mListener = null;
 
-    ArrayList<Product> mProductsList = new ArrayList<>();
-    ArrayList<Product> mFilteredProductsList = new ArrayList<>();
-    String mFilter = "";
-    int mMaxPage = 0;
-    boolean mEndReached = false;
+    private ArrayList<Product> mProductsList = new ArrayList<>();           //TODO: maybe limit the array to X, and send notification to delete items from adapter if over the limit
+    private ArrayList<Product> mFilteredProductsList = new ArrayList<>();
+    private String mFilter = "";
+    private int mMaxPage = 0;
+    private boolean mEndReached = false;
 
-    public class Product {
+    class Product {
         String mImageUrl;
         String mTitle;
         String mPrice;
@@ -57,16 +57,9 @@ public class ProductListRetriever {
 
             Product other = (Product)obj;
 
-            if ((mImageUrl == null && other.mImageUrl != null) || (mImageUrl != null && other.mImageUrl == null) || !other.mImageUrl.equals(mImageUrl)) {
-                return false;
-            }
-            if ((mTitle == null && other.mTitle != null) || (mTitle != null && other.mTitle == null) || !other.mTitle.equals(mTitle)) {
-                return false;
-            }
-            if ((mPrice == null && other.mPrice != null) || (mPrice != null && other.mPrice == null) || !other.mPrice.equals(mPrice)) {
-                return false;
-            }
-            return true;
+            return  ((mImageUrl == null && other.mImageUrl == null) || (mImageUrl != null && other.mImageUrl != null && other.mImageUrl.equals(mImageUrl))) &&
+                    ((mTitle == null && other.mTitle == null) || (mTitle != null && other.mTitle != null && other.mTitle.equals(mTitle))) &&
+                    ((mPrice == null && other.mPrice == null) || (mPrice != null && other.mPrice != null && other.mPrice.equals(mPrice)));
         }
     }
 

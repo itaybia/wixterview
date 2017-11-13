@@ -10,7 +10,7 @@ import android.widget.EditText;
 
 public class MainActivity extends AppCompatActivity{
 
-    RecyclerView mRecyclerView;
+    ProductsRecyclerView mRecyclerView;
     ProductsListAdapter mAdapter;
     EditText filterView;
 
@@ -32,7 +32,7 @@ public class MainActivity extends AppCompatActivity{
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
 
-        mRecyclerView = (RecyclerView) findViewById(R.id.productsRecyclerView);
+        mRecyclerView = (ProductsRecyclerView) findViewById(R.id.productsRecyclerView);
         mAdapter = new ProductsListAdapter(this);
         mRecyclerView.setAdapter(mAdapter);
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
