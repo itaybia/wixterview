@@ -7,10 +7,12 @@
     tools:context="com.bianco.wixterview.MainActivity"
     android:orientation="vertical">
 
-    <TextView
+    <EditText
+        android:id="@+id/productsFilter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search"/>
+        android:hint="Search"
+        android:padding="10dp"/>
 
     <android.support.v7.widget.RecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
         android:id="@+id/productsRecyclerView"

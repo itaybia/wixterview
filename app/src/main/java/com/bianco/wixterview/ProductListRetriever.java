@@ -24,11 +24,16 @@ import java.util.List;
 public class ProductListRetriever {
     private static final String TAG = "ProductListRetriever";
     private static final String SERVER_URL = "https://stark-atoll-33661.herokuapp.com/products.php?page=";
-    public static final int PRODUCTS_PER_PAGE = 10;
 
     private static ProductListRetriever instance = new ProductListRetriever();
     private RequestQueue queue = null;
-    private ProductsListListener listener = null;
+    private ProductsListListener mListener = null;
+
+    ArrayList<Product> mProductsList = new ArrayList<>();
+    ArrayList<Product> mFilteredProductsList = new ArrayList<>();
+    String mFilter = "";
+    int mMaxPage = 0;
+    boolean mEndReached = false;
 
     public class Product {
         String mImageUrl;
@@ -65,10 +70,6 @@ public class ProductListRetriever {
         }
     }
 
-    ArrayList<Product> productsList = new ArrayList<>();
-    int maxPage = 0;
-    boolean endReached = false;
-
     /* A private Constructor prevents any other
      * class from instantiating.
      */
@@ -89,19 +90,20 @@ public class ProductListRetriever {
     //listener interface to be notified about new products page retrieval
     public interface ProductsListListener {
         void OnProductsListRetrieved(int numberOfNewProducts);
+        void OnProductsListFiltered();
         void OnProductsListRetrievalFailed(int page);
     }
 
     //do the HTTP request asynchronously to get the products page
     private void loadProductsByPage(final int page) {
-        if (page <= maxPage) {
-            listener.OnProductsListRetrieved(0);
+        if (page <= mMaxPage) {
+            mListener.OnProductsListRetrieved(0);
             return;
         }
 
-        if (page > maxPage + 1 || endReached) {
+        if (page > mMaxPage + 1 || mEndReached) {
             //TODO: add debug logs
-            listener.OnProductsListRetrieved(0);
+            mListener.OnProductsListRetrieved(0);
             return;
         }
 
@@ -110,15 +112,15 @@ public class ProductListRetriever {
                     @Override
                     public void onResponse(JSONArray response) {
                         if (response.length() == 0) {
-                            endReached = true;
-                            if (listener != null) {
-                                listener.OnProductsListRetrieved(response.length());
+                            mEndReached = true;
+                            if (mListener != null) {
+                                mListener.OnProductsListRetrieved(0);
                             }
                             return;
                         }
 
-                        if (listener != null) {
-                            maxPage = page;
+                        if (mListener != null) {
+                            mMaxPage = page;
                             int count = 0;
                             for (int i = 0; i < response.length(); i++) {
                                 try {
@@ -128,25 +130,29 @@ public class ProductListRetriever {
                                             obj.has("title") ? obj.getString("title") : null,
                                             obj.has("price") ? obj.getString("price") : null);
 
-                                    if (productsList.contains(p)) {
+                                    if (mProductsList.contains(p)) {
                                         Log.d(TAG, "found duplicate: " + p.mTitle);
                                         continue;
                                     }
-                                    productsList.add(p);
-                                    count++;
+                                    mProductsList.add(p);
+
+                                    if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase().contains(mFilter))) {
+                                        mFilteredProductsList.add(p);
+                                        count++;
+                                    }
                                 } catch (JSONException e) {
                                     Log.e(TAG, "Error parsing product", e);
                                 }
                             }
-                            listener.OnProductsListRetrieved(count);
+                            mListener.OnProductsListRetrieved(count);
                         }
                     }
                 },
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
-                        if (listener != null) {
-                            listener.OnProductsListRetrievalFailed(page);
+                        if (mListener != null) {
+                            mListener.OnProductsListRetrievalFailed(page);
                         }
                     }
                 }
@@ -158,15 +164,39 @@ public class ProductListRetriever {
         loadProductsByPage(page);
     }
 
-    public void loadNextPage() {
-        loadProductsByPage(maxPage + 1);
+    /**
+     * load the next page from the server and into our list
+     *
+     * @return true if tried loading another page, false if already reached the last page
+     */
+    public boolean loadNextPage() {
+        if (mEndReached) {
+            return false;
+        }
+        loadProductsByPage(mMaxPage + 1);
+        return true;
     }
 
     public List<Product> getProductsList() {
-        return productsList;
+        return mFilteredProductsList;
     }
 
     public void setListener(ProductsListListener l) {
-        listener = l;
+        mListener = l;
+    }
+
+    public void updateFilter(String f) {
+        if (mFilter.equals(f)) {
+            return;
+        }
+        mFilter = f.toLowerCase();
+        mFilteredProductsList.clear();
+
+        for (Product p : mProductsList) {
+            if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase().contains(mFilter))) {
+                mFilteredProductsList.add(p);
+            }
+        }
+        mListener.OnProductsListFiltered();
     }
 }

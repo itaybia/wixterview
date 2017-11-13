@@ -68,6 +68,11 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
             int insertionStart = ProductListRetriever.getInstance().getProductsList().size() - numberOfNewProducts;
             notifyItemRangeInserted(insertionStart, numberOfNewProducts);
         }
+    }
+
+    @Override
+    public void OnProductsListFiltered() {
+        notifyDataSetChanged();
         //TODO: remove UI of loading
     }
 
