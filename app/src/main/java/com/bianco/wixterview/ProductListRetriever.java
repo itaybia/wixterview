@@ -34,6 +34,7 @@ public class ProductListRetriever {
     private String mFilter = "";
     private int mMaxPage = 0;
     private boolean mEndReached = false;
+    private boolean mIsLoading = false;
 
     class Product {
         String mImageUrl;
@@ -88,22 +89,22 @@ public class ProductListRetriever {
     }
 
     //do the HTTP request asynchronously to get the products page
-    private void loadProductsByPage(final int page) {
+    private boolean loadProductsByPage(final int page) {
         if (page <= mMaxPage) {
-            mListener.OnProductsListRetrieved(0);
-            return;
+            return false;
         }
 
-        if (page > mMaxPage + 1 || mEndReached) {
+        if (page > mMaxPage + 1 || mEndReached || mIsLoading) {
             //TODO: add debug logs
-            mListener.OnProductsListRetrieved(0);
-            return;
+            return false;
         }
 
+        mIsLoading = true;
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, SERVER_URL + page, null,
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
+                        mIsLoading = false;
                         if (response.length() == 0) {
                             mEndReached = true;
                             if (mListener != null) {
@@ -112,31 +113,31 @@ public class ProductListRetriever {
                             return;
                         }
 
-                        if (mListener != null) {
-                            mMaxPage = page;
-                            int count = 0;
-                            for (int i = 0; i < response.length(); i++) {
-                                try {
-                                    JSONObject obj = (JSONObject)response.get(i);
-                                    Product p = new Product(
-                                            obj.has("image") ? obj.getString("image") : null,
-                                            obj.has("title") ? obj.getString("title") : null,
-                                            obj.has("price") ? obj.getString("price") : null);
+                        mMaxPage = page;
+                        int count = 0;
+                        for (int i = 0; i < response.length(); i++) {
+                            try {
+                                JSONObject obj = (JSONObject)response.get(i);
+                                Product p = new Product(
+                                        obj.has("image") ? obj.getString("image") : null,
+                                        obj.has("title") ? obj.getString("title") : null,
+                                        obj.has("price") ? obj.getString("price") : null);
 
-                                    if (mProductsList.contains(p)) {
-                                        Log.d(TAG, "found duplicate: " + p.mTitle);
-                                        continue;
-                                    }
-                                    mProductsList.add(p);
-
-                                    if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase().contains(mFilter))) {
-                                        mFilteredProductsList.add(p);
-                                        count++;
-                                    }
-                                } catch (JSONException e) {
-                                    Log.e(TAG, "Error parsing product", e);
+                                if (mProductsList.contains(p)) {
+                                    Log.d(TAG, "found duplicate: " + p.mTitle);
+                                    continue;
                                 }
+                                mProductsList.add(p);
+
+                                if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase().contains(mFilter))) {
+                                    mFilteredProductsList.add(p);
+                                    count++;
+                                }
+                            } catch (JSONException e) {
+                                Log.e(TAG, "Error parsing product", e);
                             }
+                        }
+                        if (mListener != null) {
                             mListener.OnProductsListRetrieved(count);
                         }
                     }
@@ -144,6 +145,7 @@ public class ProductListRetriever {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        mIsLoading = false;
                         if (mListener != null) {
                             mListener.OnProductsListRetrievalFailed(page);
                         }
@@ -151,10 +153,11 @@ public class ProductListRetriever {
                 }
         );
         queue.add(request);
+        return true;
     }
 
-    public void loadPage(int page) {
-        loadProductsByPage(page);
+    public boolean loadPage(int page) {
+        return loadProductsByPage(page);
     }
 
     /**
@@ -163,11 +166,7 @@ public class ProductListRetriever {
      * @return true if tried loading another page, false if already reached the last page
      */
     public boolean loadNextPage() {
-        if (mEndReached) {
-            return false;
-        }
-        loadProductsByPage(mMaxPage + 1);
-        return true;
+        return loadProductsByPage(mMaxPage + 1);
     }
 
     public List<Product> getProductsList() {

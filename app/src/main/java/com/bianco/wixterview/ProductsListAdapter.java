@@ -16,31 +16,20 @@ import java.lang.ref.WeakReference;
  * Created by bianco on 13/11/2017.
  */
 
-public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder> implements ProductListRetriever.ProductsListListener {
+public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder> {
     private static final String TAG = "ProductsListAdapter";
 
     WeakReference<Context> mContext;
-    WeakReference<ProductsRecyclerView> mRecyclerView;
+    LastReachedListener mListener;
 
-    ProductsListAdapter(Context context) {
+
+    ProductsListAdapter(Context context, LastReachedListener listener) {
         mContext = new WeakReference<>(context);
-        ProductListRetriever.getInstance().init(context);
-        ProductListRetriever.getInstance().setListener(this);
-        ProductListRetriever.getInstance().loadPage(1);
+        mListener = listener;
     }
 
-    @Override
-    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
-        super.onAttachedToRecyclerView(recyclerView);
-        mRecyclerView = new WeakReference<>((ProductsRecyclerView) recyclerView);
-    }
-
-    @Override
-    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
-        super.onDetachedFromRecyclerView(recyclerView);
-        if (recyclerView == mRecyclerView.get()) {
-            mRecyclerView.clear();
-        }
+    public interface LastReachedListener {
+        void OnLastReachedListener();
     }
 
     @Override
@@ -53,9 +42,7 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
     @Override
     public void onBindViewHolder(ProductViewsHolder holder, int position) {
         if (position == ProductListRetriever.getInstance().getProductsList().size() - 1) {
-            if (ProductListRetriever.getInstance().loadNextPage()) {
-                //TODO: add UI of loading
-            }
+            mListener.OnLastReachedListener();
         }
 
         ProductListRetriever.Product p = ProductListRetriever.getInstance().getProductsList().get(position);
@@ -77,35 +64,5 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
     @Override
     public int getItemCount() {
         return ProductListRetriever.getInstance().getProductsList().size();
-    }
-
-    @Override
-    public void OnProductsListRetrieved(int numberOfNewProducts) {
-        Log.d(TAG, "OnProductsListRetrieved: " + numberOfNewProducts + ", List size=" + ProductListRetriever.getInstance().getProductsList().size());
-        if (numberOfNewProducts > 0) {
-            int insertionStart = ProductListRetriever.getInstance().getProductsList().size() - numberOfNewProducts;
-            notifyItemRangeInserted(insertionStart, numberOfNewProducts);
-        }
-        if (mRecyclerView != null && mRecyclerView.get() != null && mRecyclerView.get().getMaxNumberOfChildrenInView() > getItemCount() && ProductListRetriever.getInstance().loadNextPage()) {
-            //TODO: add UI of loading
-        } else {
-            //TODO: remove UI of loading
-        }
-    }
-
-    @Override
-    public void OnProductsListFiltered() {
-        notifyDataSetChanged();
-        if (mRecyclerView != null && mRecyclerView.get() != null && mRecyclerView.get().getMaxNumberOfChildrenInView() > getItemCount() && ProductListRetriever.getInstance().loadNextPage()) {
-            //TODO: add UI of loading
-        } else {
-            //TODO: remove UI of loading
-        }
-        //TODO: remove UI of loading
-    }
-
-    @Override
-    public void OnProductsListRetrievalFailed(int page) {
-        //TODO: remove UI of loading
     }
 }
