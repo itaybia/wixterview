@@ -9,6 +9,8 @@ import android.view.ViewGroup;
 
 import com.bumptech.glide.Glide;
 
+import java.lang.ref.WeakReference;
+
 
 /**
  * Created by bianco on 13/11/2017.
@@ -17,10 +19,10 @@ import com.bumptech.glide.Glide;
 public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder> implements ProductListRetriever.ProductsListListener {
     private static final String TAG = "ProductsListAdapter";
 
-    Context mContext;
+    WeakReference<Context> mContext;
 
     ProductsListAdapter(Context context) {
-        mContext = context;
+        mContext = new WeakReference<>(context);
         ProductListRetriever.getInstance().init(context);
         ProductListRetriever.getInstance().setListener(this);
         ProductListRetriever.getInstance().loadPage(1);
@@ -44,10 +46,10 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
         holder.mProductTitle.setText(p.mTitle == null ? "" : p.mTitle);
         holder.mProductPrice.setText(p.mPrice == null ? "" : p.mPrice);
 
-        if (p.mImageUrl != null) {
+        if (p.mImageUrl != null && mContext.get() != null) {
             try {
                 Glide
-                        .with(mContext)
+                        .with(mContext.get())
                         .load(p.mImageUrl)
                         .into(holder.mProductImage);
             } catch (Exception e) {
