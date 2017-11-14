@@ -48,7 +48,13 @@ public class ProductListRetriever {
         Product(String image, String title, String price) {
             mImageUrl = image;
             mTitle = title;
-            mPrice = price;
+
+            if (price != null && !price.isEmpty()) {
+                float f = Float.parseFloat(price);
+                mPrice = String.format(Locale.getDefault(), "$%.2f", f);
+            } else {
+                mPrice = "";
+            }
         }
 
         @Override
