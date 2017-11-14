@@ -3,10 +3,10 @@ wixterview
 
 Wix interview home project.
 
-i wrote the code in MVC way:
-model - ProductListRetriever - Holds products and retrieves from the server new product pages when requested
-controller - ProductsListActivity - the main activity that holds the products list and filter box
-view - the different views and the ProductsListAdapter
+i wrote the code in MVC way:<br />
+model - ProductListRetriever - Holds products and retrieves from the server new product pages when requested.<br />
+controller - ProductsListActivity - the main activity that holds the products list and filter box.<br />
+view - the different views and the ProductsListAdapter.
 
 the ProductsListActivity receives events from the views/adapter or from the ProductListRetriever when a change in the internal DB happened.
 when it receives an event, it notifies the adapter and loads the new data.
