@@ -6,6 +6,8 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
+import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 
@@ -20,27 +22,27 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
     private static final String TAG = "ProductsListAdapter";
 
     WeakReference<Context> mContext;
-    LastReachedListener mListener;
+    ProductsListAdapterListener mListener;
 
 
-    ProductsListAdapter(Context context, LastReachedListener listener) {
+    ProductsListAdapter(Context context, ProductsListAdapterListener listener) {
         mContext = new WeakReference<>(context);
         mListener = listener;
     }
 
-    public interface LastReachedListener {
+    public interface ProductsListAdapterListener {
         void OnLastReachedListener();
+        void OnRowClicked(int row, TextView title, ImageView image);
     }
 
     @Override
     public ProductViewsHolder onCreateViewHolder(ViewGroup parent, int viewType) {
         View layoutView = LayoutInflater.from(parent.getContext()).inflate(R.layout.product_row, null);
-        ProductViewsHolder holder = new ProductViewsHolder(layoutView);
-        return holder;
+        return new ProductViewsHolder(layoutView);
     }
 
     @Override
-    public void onBindViewHolder(ProductViewsHolder holder, int position) {
+    public void onBindViewHolder(final ProductViewsHolder holder, final int position) {
         if (position == ProductListRetriever.getInstance().getProductsList().size() - 1) {
             mListener.OnLastReachedListener();
         }
@@ -59,6 +61,15 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
                 Log.e(TAG, "Error loading product image", e);
             }
         }
+
+        holder.itemView.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                if (mListener != null) {
+                    mListener.OnRowClicked(position, holder.mProductTitle, holder.mProductImage);
+                }
+            }
+        });
     }
 
     @Override

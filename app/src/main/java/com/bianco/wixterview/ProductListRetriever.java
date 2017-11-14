@@ -90,12 +90,14 @@ public class ProductListRetriever {
 
     //do the HTTP request asynchronously to get the products page
     private boolean loadProductsByPage(final int page) {
+        Log.d(TAG, "loadProductsByPage: page " + page);
         if (page <= mMaxPage) {
+            Log.d(TAG, "loadProductsByPage: page already loaded");
             return false;
         }
 
         if (page > mMaxPage + 1 || mEndReached || mIsLoading) {
-            //TODO: add debug logs
+            Log.d(TAG, "loadProductsByPage: isLoading=" + mIsLoading + ", endReached=" + mEndReached + ", maxPage=" + mMaxPage);
             return false;
         }
 
@@ -104,6 +106,7 @@ public class ProductListRetriever {
                 new Response.Listener<JSONArray>() {
                     @Override
                     public void onResponse(JSONArray response) {
+                        Log.d(TAG, "loadProductsByPage: onResponse with length=" + response.length());
                         mIsLoading = false;
                         if (response.length() == 0) {
                             mEndReached = true;
@@ -138,6 +141,7 @@ public class ProductListRetriever {
                             }
                         }
                         if (mListener != null) {
+                            Log.d(TAG, "loadProductsByPage: calling listener with " + count + " items");
                             mListener.OnProductsListRetrieved(count);
                         }
                     }
@@ -145,8 +149,10 @@ public class ProductListRetriever {
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
+                        Log.d(TAG, "loadProductsByPage: onErrorResponse");
                         mIsLoading = false;
                         if (mListener != null) {
+                            Log.d(TAG, "loadProductsByPage: calling listener with error");
                             mListener.OnProductsListRetrievalFailed(page);
                         }
                     }
@@ -181,6 +187,7 @@ public class ProductListRetriever {
         if (mFilter.equals(f)) {
             return;
         }
+        Log.d(TAG, "updateFilter: new filter is: " + f.toLowerCase());
         mFilter = f.toLowerCase();
         mFilteredProductsList.clear();
 
@@ -189,6 +196,10 @@ public class ProductListRetriever {
                 mFilteredProductsList.add(p);
             }
         }
-        mListener.OnProductsListFiltered();
+
+        if (mListener != null) {
+            Log.d(TAG, "updateFilter: calling listener");
+            mListener.OnProductsListFiltered();
+        }
     }
 }

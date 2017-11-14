@@ -1,16 +1,21 @@
 package com.bianco.wixterview;
 
-import android.support.v7.app.AppCompatActivity;
+import android.app.Activity;
+import android.app.ActivityOptions;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.v7.widget.LinearLayoutManager;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.util.Pair;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.ProgressBar;
+import android.widget.TextView;
 
-public class MainActivity extends AppCompatActivity implements ProductListRetriever.ProductsListListener, ProductsListAdapter.LastReachedListener {
+public class MainActivity extends Activity implements ProductListRetriever.ProductsListListener, ProductsListAdapter.ProductsListAdapterListener {
     private static final String TAG = "MainActivity";
 
     ProductsRecyclerView mRecyclerView;
@@ -95,5 +100,16 @@ public class MainActivity extends AppCompatActivity implements ProductListRetrie
         if (ProductListRetriever.getInstance().loadNextPage()) {
             mProductsLoadingProgressView.setVisibility(View.VISIBLE);
         }
+    }
+
+    @Override
+    public void OnRowClicked(int row, TextView title, ImageView image) {
+        Pair<View, String> p = Pair.create((View) image, "image");
+        ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, p);
+        Intent intent = new Intent(this, FullscreenItemActivity.class);
+        intent.putExtra("image", ProductListRetriever.getInstance().getProductsList().get(row).mImageUrl);
+        intent.putExtra("title", ProductListRetriever.getInstance().getProductsList().get(row).mTitle);
+        intent.putExtra("price", ProductListRetriever.getInstance().getProductsList().get(row).mPrice);
+        startActivity(intent, options.toBundle());
     }
 }
