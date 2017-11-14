@@ -67,6 +67,12 @@ public class MainActivity extends Activity implements ProductListRetriever.Produ
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        ProductListRetriever.getInstance().updateFilter(mFilterView.getText().toString());
+    }
+
+    @Override
     public void OnProductsListRetrieved(int numberOfNewProducts) {
         Log.d(TAG, "OnProductsListRetrieved: " + numberOfNewProducts + ", List size=" + ProductListRetriever.getInstance().getProductsList().size());
         if (numberOfNewProducts > 0) {
