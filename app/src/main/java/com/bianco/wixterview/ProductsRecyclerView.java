@@ -25,6 +25,9 @@ public class ProductsRecyclerView extends RecyclerView {
     }
 
     @Override
+    /**
+     * try and measure how many rows the recycler view can hold
+     */
     protected void onMeasure(int widthSpec, int heightSpec) {
         super.onMeasure(widthSpec, heightSpec);
         if (getChildCount() > 0) {
@@ -33,6 +36,9 @@ public class ProductsRecyclerView extends RecyclerView {
         }
     }
 
+    /**
+     * @return the number of rows that can be seen on the screen for this recycler view
+     */
     public int getMaxNumberOfChildrenInView() {
         return mMaxNumberOfChildrenInView;
     }

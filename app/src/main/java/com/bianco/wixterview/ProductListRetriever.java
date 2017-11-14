@@ -33,46 +33,12 @@ public class ProductListRetriever {
     private RequestQueue queue = null;
     private WeakReference<ProductsListListener> mListener = null;
 
-    private ArrayList<Product> mProductsList = new ArrayList<>();           //TODO: maybe limit the array to X, and send notification to delete items from adapter if over the limit
+    private ArrayList<Product> mProductsList = new ArrayList<>();
     private ArrayList<Product> mFilteredProductsList = new ArrayList<>();
     private String mFilter = "";
     private int mMaxPage = 0;
     private boolean mEndReached = false;
     private boolean mIsLoading = false;
-
-    class Product {
-        String mImageUrl;
-        String mTitle;
-        String mPrice;
-
-        Product(String image, String title, String price) {
-            mImageUrl = image;
-            mTitle = title;
-
-            if (price != null && !price.isEmpty()) {
-                float f = Float.parseFloat(price);
-                mPrice = String.format(Locale.getDefault(), "$%.2f", f);
-            } else {
-                mPrice = "";
-            }
-        }
-
-        @Override
-        public boolean equals(Object obj) {
-            if (this == obj)
-                return true;
-            if (obj == null)
-                return false;
-            if (getClass() != obj.getClass())
-                return false;
-
-            Product other = (Product)obj;
-
-            return  ((mImageUrl == null && other.mImageUrl == null) || (mImageUrl != null && other.mImageUrl != null && other.mImageUrl.equals(mImageUrl))) &&
-                    ((mTitle == null && other.mTitle == null) || (mTitle != null && other.mTitle != null && other.mTitle.equals(mTitle))) &&
-                    ((mPrice == null && other.mPrice == null) || (mPrice != null && other.mPrice != null && other.mPrice.equals(mPrice)));
-        }
-    }
 
     /* A private Constructor prevents any other
      * class from instantiating.
@@ -87,14 +53,21 @@ public class ProductListRetriever {
         return instance;
     }
 
-    //listener interface to be notified about new products page retrieval
+    /**
+     * listener interface to be notified about new products page retrieval
+     */
     public interface ProductsListListener {
         void OnProductsListRetrieved(int numberOfNewProducts);
         void OnProductsListFiltered();
         void OnProductsListRetrievalFailed(int page);
     }
 
-    //do the HTTP request asynchronously to get the products page
+    /**
+     * if requested page was not already loaded, and we have not reached the last page, and we are not currently loading,
+     * then load the requested page asynchronously and update the lists and listeners
+     *
+     * @return true if tried loading another page, false if already reached the last page
+     */
     private boolean loadProductsByPage(final int page) {
         Log.d(TAG, "loadProductsByPage: page " + page);
         if (page <= mMaxPage) {
@@ -110,6 +83,7 @@ public class ProductListRetriever {
         mIsLoading = true;
         JsonArrayRequest request = new JsonArrayRequest(Request.Method.GET, SERVER_URL + page, null,
                 new Response.Listener<JSONArray>() {
+
                     @Override
                     public void onResponse(JSONArray response) {
                         Log.d(TAG, "loadProductsByPage: onResponse with length=" + response.length());
@@ -152,6 +126,7 @@ public class ProductListRetriever {
                         }
                     }
                 },
+
                 new Response.ErrorListener() {
                     @Override
                     public void onErrorResponse(VolleyError error) {
@@ -168,6 +143,11 @@ public class ProductListRetriever {
         return true;
     }
 
+    /**
+     * load the requested page from the server and into our list
+     *
+     * @return true if tried loading another page, false if already reached the last page
+     */
     public boolean loadPage(int page) {
         return loadProductsByPage(page);
     }
@@ -181,6 +161,9 @@ public class ProductListRetriever {
         return loadProductsByPage(mMaxPage + 1);
     }
 
+    /**
+     * @return the filtered product list
+     */
     public List<Product> getProductsList() {
         return mFilteredProductsList;
     }
@@ -189,6 +172,9 @@ public class ProductListRetriever {
         mListener = new WeakReference<>(l);
     }
 
+    /**
+     * update the products filter. the filtered list will be updated accordingly and the listeners notified.
+     */
     public void updateFilter(String f) {
         if (mFilter.equals(f)) {
             return;

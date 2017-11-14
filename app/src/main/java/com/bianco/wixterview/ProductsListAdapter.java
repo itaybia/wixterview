@@ -47,10 +47,11 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
             mListener.get().OnLastReachedListener();
         }
 
-        ProductListRetriever.Product p = ProductListRetriever.getInstance(mContext != null ? mContext.get() : null).getProductsList().get(position);
+        Product p = ProductListRetriever.getInstance(mContext != null ? mContext.get() : null).getProductsList().get(position);
         holder.mProductTitle.setText(p.mTitle == null ? "" : p.mTitle);
         holder.mProductPrice.setText(p.mPrice == null ? "" : p.mPrice);
 
+        //try to load the image from the url into the holder's image view
         if (p.mImageUrl != null && mContext.get() != null) {
             Log.d(TAG, "loading product image for " + (p.mTitle == null ? "" : p.mTitle));
             try {

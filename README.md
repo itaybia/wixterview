@@ -20,6 +20,9 @@ explanation by steps in the general guidelines:
     get the image in the detailed view without another image request.
 3) the ProductsListAdapter notices when it reaches the last element in the ProductListRetriever's product list, and notifies the observer (the activity) to ask ProductListRetriever
     to retrieve the next page. the activity shows the progress bar until a response arrives.
+
+    ASSUMPTION: the products list is not huge and would not cause a memory strain to hold it. otherwise some changes would need to be made to dispose of pages when reaching a theshold.
+
 4) the ProductListRetriever on new page response checks if a product is already in the product list. the Product object has an "equals" override to accomodate this.
 5) the ProductListRetriever has 2 lists. one that holds all products, and one that holds the filtered products. the ProductsListAdapter only shows the filtered list.
     the search EditText view has a textChangeListener that updates the ProductListRetriever with the current filter. ProductListRetriever then filters the list

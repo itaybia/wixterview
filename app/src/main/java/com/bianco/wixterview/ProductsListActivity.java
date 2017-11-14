@@ -34,12 +34,12 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
         mFilterView = (EditText) findViewById(R.id.productsFilter);
         mFilterView.addTextChangedListener(new TextWatcher() {
 
+            //update the list according to the new filter
             public void afterTextChanged(Editable s) {
                 ProductListRetriever.getInstance(ProductsListActivity.this).updateFilter(s.toString());
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
-
             public void onTextChanged(CharSequence s, int start, int before, int count) {}
         });
 
@@ -48,7 +48,7 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
         mRecyclerView.setAdapter(mAdapter);
         LinearLayoutManager manager = new LinearLayoutManager(this, LinearLayoutManager.VERTICAL, false);
         mRecyclerView.setLayoutManager(manager);
-        mRecyclerView.requestFocus();
+        mRecyclerView.requestFocus();   //make sure the keyboard is not up when starting the activity (due to the existence of the EditText view)
 
         ProductListRetriever.getInstance(this);
     }
@@ -58,7 +58,7 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
         super.onStart();
         ProductListRetriever.getInstance(this).setListener(this);
         if (ProductListRetriever.getInstance(this).loadPage(1)) {
-            mProductsLoadingProgressView.setVisibility(View.VISIBLE);   //TODO: check why sometimes seems like it loads a lot at first
+            mProductsLoadingProgressView.setVisibility(View.VISIBLE);
         }
     }
 
@@ -75,6 +75,10 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
     }
 
     @Override
+    /**
+     * a new products page was retrieved. update the adapter.
+     * if the recycler view can hold more rows, try and load the next page until it is full.
+     */
     public void OnProductsListRetrieved(int numberOfNewProducts) {
         Log.d(TAG, "OnProductsListRetrieved: " + numberOfNewProducts + ", List size=" + ProductListRetriever.getInstance(this).getProductsList().size());
         if (numberOfNewProducts > 0) {
@@ -89,6 +93,10 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
     }
 
     @Override
+    /**
+     * the products list was filtered, reload the items in the adapter.
+     * if the recycler view can hold more rows, try and load the next page until it is full.
+     */
     public void OnProductsListFiltered() {
         mAdapter.notifyDataSetChanged();
         if (mRecyclerView != null && mRecyclerView.getMaxNumberOfChildrenInView() > mAdapter.getItemCount() && ProductListRetriever.getInstance(this).loadNextPage()) {
@@ -104,6 +112,9 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
     }
 
     @Override
+    /**
+     * the last row was scrolled to. try to load the next page.
+     */
     public void OnLastReachedListener() {
         if (ProductListRetriever.getInstance(this).loadNextPage()) {
             mProductsLoadingProgressView.setVisibility(View.VISIBLE);
@@ -111,6 +122,9 @@ public class ProductsListActivity extends Activity implements ProductListRetriev
     }
 
     @Override
+    /**
+     * a row in the recycler view was clicked. animate the thumbnail into a fullscreen view.
+     */
     public void OnRowClicked(int row, TextView title, ImageView image) {
         Pair<View, String> p = Pair.create((View) image, "image");
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, p);

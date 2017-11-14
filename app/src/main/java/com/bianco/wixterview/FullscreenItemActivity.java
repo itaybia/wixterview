@@ -46,6 +46,7 @@ public class FullscreenItemActivity extends Activity {
             }
         }
 
+        //clicking the image should return us to the list of products
         mImageView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
