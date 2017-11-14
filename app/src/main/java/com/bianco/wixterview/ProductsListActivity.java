@@ -15,8 +15,8 @@ import android.widget.ImageView;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
-public class MainActivity extends Activity implements ProductListRetriever.ProductsListListener, ProductsListAdapter.ProductsListAdapterListener {
-    private static final String TAG = "MainActivity";
+public class ProductsListActivity extends Activity implements ProductListRetriever.ProductsListListener, ProductsListAdapter.ProductsListAdapterListener {
+    private static final String TAG = "ProductsListActivity";
 
     ProductsRecyclerView mRecyclerView;
     ProductsListAdapter mAdapter;
@@ -35,7 +35,7 @@ public class MainActivity extends Activity implements ProductListRetriever.Produ
         mFilterView.addTextChangedListener(new TextWatcher() {
 
             public void afterTextChanged(Editable s) {
-                ProductListRetriever.getInstance().updateFilter(s.toString());
+                ProductListRetriever.getInstance(ProductsListActivity.this).updateFilter(s.toString());
             }
 
             public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
@@ -50,36 +50,38 @@ public class MainActivity extends Activity implements ProductListRetriever.Produ
         mRecyclerView.setLayoutManager(manager);
         mRecyclerView.requestFocus();
 
-        ProductListRetriever.getInstance().init(this);
+        ProductListRetriever.getInstance(this);
     }
 
     @Override
     public void onStart() {
         super.onStart();
-        ProductListRetriever.getInstance().setListener(this);
-        ProductListRetriever.getInstance().loadPage(1);
+        ProductListRetriever.getInstance(this).setListener(this);
+        if (ProductListRetriever.getInstance(this).loadPage(1)) {
+            mProductsLoadingProgressView.setVisibility(View.VISIBLE);   //TODO: check why sometimes seems like it loads a lot at first
+        }
     }
 
     @Override
     public void onStop() {
         super.onStop();
-        ProductListRetriever.getInstance().setListener(null);
+        ProductListRetriever.getInstance(this).setListener(null);
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        ProductListRetriever.getInstance().updateFilter(mFilterView.getText().toString());
+        ProductListRetriever.getInstance(this).updateFilter(mFilterView.getText().toString());
     }
 
     @Override
     public void OnProductsListRetrieved(int numberOfNewProducts) {
-        Log.d(TAG, "OnProductsListRetrieved: " + numberOfNewProducts + ", List size=" + ProductListRetriever.getInstance().getProductsList().size());
+        Log.d(TAG, "OnProductsListRetrieved: " + numberOfNewProducts + ", List size=" + ProductListRetriever.getInstance(this).getProductsList().size());
         if (numberOfNewProducts > 0) {
-            int insertionStart = ProductListRetriever.getInstance().getProductsList().size() - numberOfNewProducts;
+            int insertionStart = ProductListRetriever.getInstance(this).getProductsList().size() - numberOfNewProducts;
             mAdapter.notifyItemRangeInserted(insertionStart, numberOfNewProducts);
         }
-        if (mRecyclerView != null && mRecyclerView.getMaxNumberOfChildrenInView() > mAdapter.getItemCount() && ProductListRetriever.getInstance().loadNextPage()) {
+        if (mRecyclerView != null && mRecyclerView.getMaxNumberOfChildrenInView() > mAdapter.getItemCount() && ProductListRetriever.getInstance(this).loadNextPage()) {
             mProductsLoadingProgressView.setVisibility(View.VISIBLE);
         } else {
             mProductsLoadingProgressView.setVisibility(View.GONE);
@@ -89,7 +91,7 @@ public class MainActivity extends Activity implements ProductListRetriever.Produ
     @Override
     public void OnProductsListFiltered() {
         mAdapter.notifyDataSetChanged();
-        if (mRecyclerView != null && mRecyclerView.getMaxNumberOfChildrenInView() > mAdapter.getItemCount() && ProductListRetriever.getInstance().loadNextPage()) {
+        if (mRecyclerView != null && mRecyclerView.getMaxNumberOfChildrenInView() > mAdapter.getItemCount() && ProductListRetriever.getInstance(this).loadNextPage()) {
             mProductsLoadingProgressView.setVisibility(View.VISIBLE);
         } else {
             mProductsLoadingProgressView.setVisibility(View.GONE);
@@ -103,7 +105,7 @@ public class MainActivity extends Activity implements ProductListRetriever.Produ
 
     @Override
     public void OnLastReachedListener() {
-        if (ProductListRetriever.getInstance().loadNextPage()) {
+        if (ProductListRetriever.getInstance(this).loadNextPage()) {
             mProductsLoadingProgressView.setVisibility(View.VISIBLE);
         }
     }
@@ -113,9 +115,9 @@ public class MainActivity extends Activity implements ProductListRetriever.Produ
         Pair<View, String> p = Pair.create((View) image, "image");
         ActivityOptions options = ActivityOptions.makeSceneTransitionAnimation(this, p);
         Intent intent = new Intent(this, FullscreenItemActivity.class);
-        intent.putExtra("image", ProductListRetriever.getInstance().getProductsList().get(row).mImageUrl);
-        intent.putExtra("title", ProductListRetriever.getInstance().getProductsList().get(row).mTitle);
-        intent.putExtra("price", ProductListRetriever.getInstance().getProductsList().get(row).mPrice);
+        intent.putExtra("image", ProductListRetriever.getInstance(this).getProductsList().get(row).mImageUrl);
+        intent.putExtra("title", ProductListRetriever.getInstance(this).getProductsList().get(row).mTitle);
+        intent.putExtra("price", ProductListRetriever.getInstance(this).getProductsList().get(row).mPrice);
         startActivity(intent, options.toBundle());
     }
 }

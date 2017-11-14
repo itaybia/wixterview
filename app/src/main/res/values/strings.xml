@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">wixterview</string>
+    <string name="filter_hint">Search</string>
 </resources>

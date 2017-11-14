@@ -14,11 +14,15 @@ import org.json.JSONArray;
 import org.json.JSONException;
 import org.json.JSONObject;
 
+import java.lang.ref.WeakReference;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /**
  * Created by bianco on 13/11/2017.
+ *
+ * Holds products and retrieves from the server new product pages when requested
  */
 
 public class ProductListRetriever {
@@ -27,7 +31,7 @@ public class ProductListRetriever {
 
     private static ProductListRetriever instance = new ProductListRetriever();
     private RequestQueue queue = null;
-    private ProductsListListener mListener = null;
+    private WeakReference<ProductsListListener> mListener = null;
 
     private ArrayList<Product> mProductsList = new ArrayList<>();           //TODO: maybe limit the array to X, and send notification to delete items from adapter if over the limit
     private ArrayList<Product> mFilteredProductsList = new ArrayList<>();
@@ -70,15 +74,11 @@ public class ProductListRetriever {
     private ProductListRetriever() {}
 
     /* Static 'instance' method */
-    public static ProductListRetriever getInstance( ) {
-        return instance;
-    }
-
-    //the ProductListRetriever should be initialized once to get the request queue running
-    public void init(Context context) {
-        if (queue == null) {
-            queue = Volley.newRequestQueue(context.getApplicationContext());
+    public static ProductListRetriever getInstance(Context context) {
+        if (instance.queue == null && context != null) {
+            instance.queue = Volley.newRequestQueue(context.getApplicationContext());
         }
+        return instance;
     }
 
     //listener interface to be notified about new products page retrieval
@@ -110,8 +110,8 @@ public class ProductListRetriever {
                         mIsLoading = false;
                         if (response.length() == 0) {
                             mEndReached = true;
-                            if (mListener != null) {
-                                mListener.OnProductsListRetrieved(0);
+                            if (mListener != null && mListener.get() != null) {
+                                mListener.get().OnProductsListRetrieved(0);
                             }
                             return;
                         }
@@ -132,7 +132,7 @@ public class ProductListRetriever {
                                 }
                                 mProductsList.add(p);
 
-                                if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase().contains(mFilter))) {
+                                if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase(Locale.getDefault()).contains(mFilter))) {
                                     mFilteredProductsList.add(p);
                                     count++;
                                 }
@@ -140,9 +140,9 @@ public class ProductListRetriever {
                                 Log.e(TAG, "Error parsing product", e);
                             }
                         }
-                        if (mListener != null) {
+                        if (mListener != null && mListener.get() != null) {
                             Log.d(TAG, "loadProductsByPage: calling listener with " + count + " items");
-                            mListener.OnProductsListRetrieved(count);
+                            mListener.get().OnProductsListRetrieved(count);
                         }
                     }
                 },
@@ -151,9 +151,9 @@ public class ProductListRetriever {
                     public void onErrorResponse(VolleyError error) {
                         Log.d(TAG, "loadProductsByPage: onErrorResponse");
                         mIsLoading = false;
-                        if (mListener != null) {
+                        if (mListener != null && mListener.get() != null) {
                             Log.d(TAG, "loadProductsByPage: calling listener with error");
-                            mListener.OnProductsListRetrievalFailed(page);
+                            mListener.get().OnProductsListRetrievalFailed(page);
                         }
                     }
                 }
@@ -180,26 +180,26 @@ public class ProductListRetriever {
     }
 
     public void setListener(ProductsListListener l) {
-        mListener = l;
+        mListener = new WeakReference<>(l);
     }
 
     public void updateFilter(String f) {
         if (mFilter.equals(f)) {
             return;
         }
-        Log.d(TAG, "updateFilter: new filter is: " + f.toLowerCase());
-        mFilter = f.toLowerCase();
+        Log.d(TAG, "updateFilter: new filter is: " + f.toLowerCase(Locale.getDefault()));
+        mFilter = f.toLowerCase(Locale.getDefault());
         mFilteredProductsList.clear();
 
         for (Product p : mProductsList) {
-            if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase().contains(mFilter))) {
+            if (mFilter.isEmpty() || (p.mTitle != null && p.mTitle.toLowerCase(Locale.getDefault()).contains(mFilter))) {
                 mFilteredProductsList.add(p);
             }
         }
 
-        if (mListener != null) {
+        if (mListener != null && mListener.get() != null) {
             Log.d(TAG, "updateFilter: calling listener");
-            mListener.OnProductsListFiltered();
+            mListener.get().OnProductsListFiltered();
         }
     }
 }

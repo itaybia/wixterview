@@ -22,12 +22,12 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
     private static final String TAG = "ProductsListAdapter";
 
     WeakReference<Context> mContext;
-    ProductsListAdapterListener mListener;
+    WeakReference<ProductsListAdapterListener> mListener;
 
 
     ProductsListAdapter(Context context, ProductsListAdapterListener listener) {
         mContext = new WeakReference<>(context);
-        mListener = listener;
+        mListener = new WeakReference<>(listener);
     }
 
     public interface ProductsListAdapterListener {
@@ -43,15 +43,16 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
 
     @Override
     public void onBindViewHolder(final ProductViewsHolder holder, final int position) {
-        if (position == ProductListRetriever.getInstance().getProductsList().size() - 1) {
-            mListener.OnLastReachedListener();
+        if (mListener != null && mListener.get() != null && position == ProductListRetriever.getInstance(mContext != null ? mContext.get() : null).getProductsList().size() - 1) {
+            mListener.get().OnLastReachedListener();
         }
 
-        ProductListRetriever.Product p = ProductListRetriever.getInstance().getProductsList().get(position);
+        ProductListRetriever.Product p = ProductListRetriever.getInstance(mContext != null ? mContext.get() : null).getProductsList().get(position);
         holder.mProductTitle.setText(p.mTitle == null ? "" : p.mTitle);
         holder.mProductPrice.setText(p.mPrice == null ? "" : p.mPrice);
 
         if (p.mImageUrl != null && mContext.get() != null) {
+            Log.d(TAG, "loading product image for " + (p.mTitle == null ? "" : p.mTitle));
             try {
                 Glide
                         .with(mContext.get())
@@ -65,8 +66,8 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
         holder.itemView.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (mListener != null) {
-                    mListener.OnRowClicked(position, holder.mProductTitle, holder.mProductImage);
+                if (mListener != null && mListener.get() != null) {
+                    mListener.get().OnRowClicked(position, holder.mProductTitle, holder.mProductImage);
                 }
             }
         });
@@ -74,6 +75,6 @@ public class ProductsListAdapter extends RecyclerView.Adapter<ProductViewsHolder
 
     @Override
     public int getItemCount() {
-        return ProductListRetriever.getInstance().getProductsList().size();
+        return ProductListRetriever.getInstance(mContext != null ? mContext.get() : null).getProductsList().size();
     }
 }

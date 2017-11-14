@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context="com.bianco.wixterview.MainActivity"
+    tools:context="com.bianco.wixterview.ProductsListActivity"
     android:orientation="vertical">
 
     <ProgressBar
@@ -18,7 +18,7 @@
         android:id="@+id/productsFilter"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:hint="Search"
+        android:hint="@string/filter_hint"
         android:padding="10dp"/>
 
     <com.bianco.wixterview.ProductsRecyclerView xmlns:android="http://schemas.android.com/apk/res/android"
